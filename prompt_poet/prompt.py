@@ -157,9 +157,6 @@ class Prompt:
 
     def truncate(self, token_limit: int = None, truncation_step: int = None):
         """An idempotent operation which truncates the rendered template according to the token limit."""
-        # Invalidate the cached tokens.
-        self._cached_tokens = None
-
         if token_limit is not None:
             self.logger.info(f"Overriding {self._token_limit=} with {token_limit=}")
         else:
@@ -195,6 +192,8 @@ class Prompt:
         )
 
         if len(self.tokens) > token_limit:
+            # Reset the parts to the pretruncation state.
+            self._reset_parts()
             raise TruncationError(
                 f"Failed to successfully truncate the prompt to below token limit: {len(self.tokens)=} {token_limit=}"
             )
@@ -228,16 +227,6 @@ class Prompt:
     def template_package_name(self) -> str:
         """The metadata associated with the template."""
         return self._template.template_package_name
-
-    @property
-    def pretruncation_parts(self) -> list[PromptPart]:
-        """The parts of the prompt prior to truncation."""
-        return self._parts_bak if self._parts_bak else self._parts
-
-    @property
-    def parts(self) -> list[PromptPart]:
-        """The parts of the prompt."""
-        return self._parts
 
     @property
     def pretruncation_string(self) -> str:
@@ -481,6 +470,7 @@ class Prompt:
     def _reset_parts(self):
         """Reset the parts to the pretruncation state."""
         # Reset the parts to the pretruncation state, if necessary. Ensures idempotency.
+        self._cached_tokens = None
         if self._parts_bak:
             self._parts = copy.deepcopy(self._parts_bak)
         else:
