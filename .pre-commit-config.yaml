@@ -1,0 +1,47 @@
+exclude: ^(docs/)|(__init__\.py)|(__pycache__)|(tests/)
+
+default_language_version:
+  python: python3
+
+repos:
+  # black
+  - repo: https://github.com/ambv/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        args:
+          - --line-length=88
+
+  # flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        # See https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes and https://flake8.pycqa.org/en/latest/user/error-codes.html.
+        entry: bash -c 'git diff --name-only $COMMIT | grep "\.py$" | gxargs --delimiter="\n" --no-run-if-empty flake8 --ignore=E203,W503,W504,E741,E501 --max-complexity=30 --max-line-length=88 --show-source --statistics'
+
+  # pydocstyle
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args:
+          - --source
+          - --explain
+          - --convention=google
+
+  # isort
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-ast
+      - id: check-merge-conflict

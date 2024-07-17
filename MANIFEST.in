@@ -1,0 +1,3 @@
+include VERSION
+include README.md
+recursive-include prompt_poet/examples *

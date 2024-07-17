@@ -1,0 +1,14 @@
+{% set character_definition_messages = get_character_definition_messages(character, username) %}
+{% if character_definition_messages %}
+  {% for cai_message in character_definition_messages %}
+    {% if cai_message.author %}
+      {% set message = canonicalize_user_name(cai_message.author) + ": " + cai_message.text %}
+    {% else %}
+      {% set message = cai_message.text %}
+    {% endif %}
+- name: "character_definition_message_{{ loop.index }}"
+  raw_string: |
+    {{ settings.start_token }}{{ maybe_inject_narrator(escape_special_characters(message)) }}{{ settings.eom }}
+    {% set settings.start_token = settings.bom %}
+  {% endfor %}
+{% endif %}

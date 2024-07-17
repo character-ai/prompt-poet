@@ -1,0 +1,23 @@
+{# Setup some bookkeeping. #}
+{% set ns = namespace() %}
+{% set ns.previous_pin_idx = -1 %}
+
+{% for cai_msg in cai_messages %}
+  {% if cai_msg.is_pinned %}
+
+    {# If the current pin does not directly follow a previous pin, add an interleaved message. #}
+    {% if ns.previous_pin_idx >= 0 and ns.previous_pin_idx < loop.index0 - 1 %}
+- name: "pin_interleave_message_at_{{ loop.index }}"
+  raw_string: |
+    {{ settings.start_token }}narrator: [some messages omitted]{{ settings.eom }}
+      {%- set settings.start_token = settings.bom -%}
+    {% endif %}
+    {% set ns.previous_pin_idx = loop.index0 %}
+
+    {% set qual_author_msg =  canonicalize_user_name(cai_msg.author) + ": " + cai_msg.text %}
+- name: "pinned_message_{{ loop.index }}"
+  raw_string: |
+    {{ settings.start_token }}{{ escape_special_characters(qual_author_msg) }}{{ settings.eom }}
+    {% set settings.start_token = settings.bom %}
+  {% endif %}
+{% endfor %}

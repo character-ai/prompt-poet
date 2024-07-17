@@ -1,0 +1,20 @@
+{# Description: An example Character.AI (cai) prompt template. #}
+{% set settings = namespace() %}
+
+{% from 'macros/global_settings.yml.j2' import init_settings %}
+{{ init_settings(settings) }}
+
+{% include 'sections/validate_inputs.yml.j2' %}
+
+{# WARNING: This name `bod_ts` must be first part in the template! #}
+{% include 'sections/bod_timestamp.yml.j2' %}
+
+{% include 'sections/character_definition.yml.j2' %}
+
+{% include 'sections/persona_definition.yml.j2' %}
+
+{% include 'sections/cai_message_pins.yml.j2' %}
+
+{% include 'sections/cai_messages.yml.j2' %}
+
+{% include 'sections/reply_prompt.yml.j2' %}

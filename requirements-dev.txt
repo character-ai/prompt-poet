@@ -1,0 +1,5 @@
+-r requirements.txt   # This will include all the main requirements
+
+# Install the requirements for the development environment
+pytest==8.2.2
+pre-commit==3.7.1

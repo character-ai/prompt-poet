@@ -1,0 +1,16 @@
+{% for _ in range(num_hundred_sections) %}
+{% include 'sections/hundred_token_section.yml.j2' %}
+{% endfor %}
+
+{% for _ in range(num_ten_sections) %}
+{% include 'sections/ten_token_section.yml.j2' %}
+{% endfor %}
+
+{% for el in truncation_elements %}
+- name: {{ loop.index }}
+  truncation_priority: 5
+  raw_string: dummy string
+  tokens: {{ el["tokens"] }}
+{% endfor %}
+
+{% include 'sections/ten_token_section.yml.j2' %}

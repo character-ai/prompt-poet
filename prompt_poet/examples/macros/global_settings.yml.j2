@@ -1,0 +1,11 @@
+{# This file contains global settings used across all production templates. #}
+
+{%- macro init_settings(ns) -%}
+    {%- set ns.bod = "<|beginningofdialog|>" -%}
+    {%- set ns.bom = "<|beginningofmessage|>" -%}
+    {%- set ns.eom = "<|endofmessage|>" -%}
+    {# Use this to represent explicit whitespace at the beginning or end of `raw_string`.#}
+    {%- set ns.space = "<|space|>" -%}
+    {# `start_token` ensures we don't add a BOM to the first message after timestamp.#}
+    {%- set ns.start_token = ns.space -%}
+{%- endmacro -%}

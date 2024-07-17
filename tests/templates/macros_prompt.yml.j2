@@ -1,0 +1,9 @@
+{% set settings = namespace() %}
+
+{% from 'macros/global_settings.yml.j2' import init_settings %}
+{{ init_settings(settings) }}
+
+- name: first part
+  raw_string: {{ settings.bod }}Raw string of first part{{ settings.eom}}
+- name: second part
+  raw_string: {{ settings.bom }}Raw string of second part{{ settings.eom}}

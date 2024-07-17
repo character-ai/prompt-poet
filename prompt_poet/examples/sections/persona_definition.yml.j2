@@ -1,0 +1,6 @@
+{% if persona_definition %}
+- name: "persona"
+  raw_string: |
+    {{ settings.start_token }}{{ canonicalize_user_name(username) }}: {{ escape_special_characters(persona_definition) }}{{ settings.eom }}
+  {% set settings.start_token = settings.bom %}
+{% endif %}

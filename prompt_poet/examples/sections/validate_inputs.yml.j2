@@ -1,0 +1,7 @@
+{% if not username %}
+  {{ raise_missing_context_data("username") }}
+{% endif %}
+
+{% if not character %}
+  {{ raise_missing_context_data("character") }}
+{% endif %}

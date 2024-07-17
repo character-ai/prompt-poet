@@ -1,0 +1,7 @@
+{%- macro init_settings(ns) -%}
+    {%- set ns.bod = "<|beginningofdialog|>" -%}
+    {%- set ns.bom = "<|beginningofmessage|>" -%}
+    {%- set ns.eom = "<|endofmessage|>" -%}
+    {# Use this to represent explicit whitespace at the beginning or end of `raw_string`.#}
+    {%- set ns.space = "<|space|>" -%}
+{%- endmacro -%}
