@@ -34,16 +34,22 @@ raw_template = """
     You are {{ character_name }}. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.
 
 {% if examples %}
+- name: examples_instruction
+  truncation_priority: 3
+  raw_string: |
+    {{ sep }}Use the following example dialogue to guide the conversation.
+{% endif %}
+
 {% for example in examples %}
 - name: example_{{ loop.index }}
+  truncation_priority: 2
   raw_string: |
     {{ sep }}{{ example }}
 {% endfor %}
-{% endif %}
 
 {% for message in messages %}
 - name: message_{{ loop.index }}
-  truncation_priority: 5
+  truncation_priority: 1
   raw_string: |
     {{ sep }}{{ message }}
 {% endfor %}
@@ -58,54 +64,49 @@ prompt = Prompt(
     template_data={
         "sep": "<|sep|>",
         "character_name": "Balderdash",
+        "examples": ["User: Hi Balderdash-- how can you help me?", "Balderdash: I specialize in homework help-- ask me anything!"],
         "messages": ["Jeff: Hi there!"]
     }
 )
 print(prompt.string)
->>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
-```
+>>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Use the following example dialogue to guide the conversation.<|sep|>User: Hi Balderdash-- how can you help me?<|sep|>Balderdash: I specialize in homework help-- ask me anything!<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
 
-Extract the raw tokens from the prompt.
+# Tokenize and extract the raw prompt tokens.
 
-```python
 prompt.tokenize()
 print(prompt.tokens)
->>> [3616, 413, 9772, 602, 44641, 23, 686, 413, 267, 6630, 10780, 4630, 539, 26865, 23, 27872, 23, 686, 413, 3662, 296, 337, 6498, 308, 1046, 20577, 296, 6954, 23, 1432, 84900, 1429, 40714, 35, 5251, 604, 10, 1432, 84900, 1429, 44762, 602, 44641, 35]
-```
+>>> [3616, 413, 9772, 602, 44641, 23, 686, 413, 267, 6630, 10780, 4630, 539, 26865, 23, 27872, 23, 686, 413, 3662, 296, 337, 6498, 308, 1046, 20577, 296, 6954, 23, 1432, 84900, 1429, 35545, 274, 3092, 2314, 14951, 296, 8104, 274, 5637, 23, 1432, 84900, 1429, 17761, 35, 5251, 9772, 602, 44641, 456, 692, 473, 326, 1067, 454, 40, 1432, 84900, 1429, 44762, 602, 44641, 35, 297, 57804, 303, 23842, 1067, 456, 1338, 454, 1340, 10, 1432, 84900, 1429, 40714, 35, 5251, 604, 10, 1432, 84900, 1429, 44762, 602, 44641, 35]
+len(prompt.tokens)
+>>> 90
 
-You can play with the cache-friendly truncation algorithm (`truncation_step` and `token_limit`) out of the box to maximize KV cache utilization on successive messages.
+# Play with the truncation algorithm by varying the `truncation_step` and `token_limit`.
 
-> **Note**: notice the `truncation_priority` optionally set on each part in the template. Not setting a `truncation_priority` or setting it to 0 on a given part will preclude it from truncation. If no parts have `truncation_priority` set and the token_limit is exceeded, truncation will fail. Specifically, if after truncation the prompt tokens exceed the token limit `prompt.truncate()` will raise.
-
-```python
-prompt = Prompt(
-    raw_template=raw_template,
-    template_data={
-        "sep": "<|sep|>",
-        "character_name": "Balderdash",
-        "messages": [
-            "Jeff: Hi there!",
-            "Balderdash: Hi! How can I help you today?",
-            "Jeff: I need help with my homework.",
-            "Balderdash: Sounds great. I am a fantastic choice to help you with your homework. What is it?"
-        ]
-    }
-)
-prompt.tokenize()
 prompt.truncate(token_limit=80, truncation_step=5)
 print(prompt.string)
->>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: I need help with my homework.<|sep|>Balderdash: Sounds great. I am a fantastic choice to help you with your homework. What is it?<|sep|>Balderdash:'
+>>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>User: Hi Balderdash-- how can you help me?<|sep|>Balderdash: I specialize in homework help-- ask me anything!<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
 
-print(prompt.tokens)
->>> [3616, 413, 9772, 602, 44641, 23, 686, 413, 267, 6630, 10780, 4630, 539, 26865, 23, 27872, 23, 686, 413, 3662, 296, 337, 6498, 308, 1046, 20577, 296, 6954, 23, 1432, 84900, 1429, 40714, 35, 297, 756, 1067, 377, 465, 23842, 23, 1432, 84900, 1429, 44762, 602, 44641, 35, 6837, 1125, 23, 297, 650, 267, 8309, 3777, 296, 1067, 326, 377, 501, 23842, 23, 984, 334, 336, 40, 1432, 84900, 1429, 44762, 602, 44641, 35]
+len(prompt.tokens)
+>>> 77
 
-prompt.truncate(token_limit=100, truncation_step=5)
+prompt.truncate(token_limit=60, truncation_step=5)
 print(prompt.string)
->>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: Hi there!<|sep|>Balderdash: Hi! How can I help you today?<|sep|>Jeff: I need help with my homework.<|sep|>Balderdash: Sounds great. I am a fantastic choice to help you with your homework. What is it?<|sep|>Balderdash:'
+>>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
 
-print(prompt.tokens)
->>> [3616, 413, 9772, 602, 44641, 23, 686, 413, 267, 6630, 10780, 4630, 539, 26865, 23, 27872, 23, 686, 413, 3662, 296, 337, 6498, 308, 1046, 20577, 296, 6954, 23, 1432, 84900, 1429, 40714, 35, 5251, 604, 10, 1432, 84900, 1429, 44762, 602, 44641, 35, 5251, 10, 1171, 473, 297, 1067, 326, 2272, 40, 1432, 84900, 1429, 40714, 35, 297, 756, 1067, 377, 465, 23842, 23, 1432, 84900, 1429, 44762, 602, 44641, 35, 6837, 1125, 23, 297, 650, 267, 8309, 3777, 296, 1067, 326, 377, 501, 23842, 23, 984, 334, 336, 40, 1432, 84900, 1429, 44762, 602, 44641, 35]
+len(prompt.tokens)
+>>> 44
+
+>>> prompt.truncate(token_limit=30, truncation_step=5)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File ".../prompt_poet/prompt.py", line 198, in truncate
+    raise TruncationError(
+pp_exceptions.TruncationError: Failed to successfully truncate the prompt to below token limit: len(self.tokens)=36 token_limit=30. Resetting to pre-truncation state.
+
+len(prompt.tokens)
+>>> 90
 ```
+
+> **Note**: notice the `truncation_priority` optionally set on each part in the template. Not setting a `truncation_priority` or setting it to 0 on a given part will preclude it from truncation. If no parts have `truncation_priority` set and the token_limit is exceeded, truncation will fail. Specifically, if after truncation the prompt tokens exceed the token limit `prompt.truncate()` will raise.
 
 ### Using a Template Registry
 A Template Registry is simply the concept of storing templates as files on disk. In using a Template Registry you can isolate template files from your python code and load these files directly from disk. In production systems, these template files can optionally be loaded from an in-memory cache on successive uses, saving on disk I/O. In the future a Template Registry may become a first-class citizen of Prompt Poet.
@@ -117,16 +118,22 @@ Filename: **chat_template.yml.j2**
     You are {{ character_name }}. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.
 
 {% if examples %}
+- name: examples_instruction
+  truncation_priority: 3
+  raw_string: |
+    {{ sep }}Use the following example dialogue to guide the conversation.
+{% endif %}
+
 {% for example in examples %}
 - name: example_{{ loop.index }}
+  truncation_priority: 2
   raw_string: |
     {{ sep }}{{ example }}
 {% endfor %}
-{% endif %}
 
 {% for message in messages %}
 - name: message_{{ loop.index }}
-  truncation_priority: 5
+  truncation_priority: 1
   raw_string: |
     {{ sep }}{{ message }}
 {% endfor %}
@@ -149,6 +156,8 @@ prompt = Prompt(
         "messages": ["Jeff: Hi there!"]
     }
 )
+print(prompt.string)
+>>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
 ```
 
 ### Using C.AI Examples

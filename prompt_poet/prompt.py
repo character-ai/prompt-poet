@@ -192,10 +192,11 @@ class Prompt:
         )
 
         if len(self.tokens) > token_limit:
+            num_tokens = len(self.tokens)
             # Reset the parts to the pretruncation state.
             self._reset_parts()
             raise TruncationError(
-                f"Failed to successfully truncate the prompt to below token limit: {len(self.tokens)=} {token_limit=}"
+                f"Failed to successfully truncate the prompt to below token limit: {num_tokens=} {token_limit=}. Resetting to pre-truncation state."
             )
 
     @property
