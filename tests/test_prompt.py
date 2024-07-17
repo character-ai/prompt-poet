@@ -3,7 +3,7 @@ import pytest
 import jinja2 as j2
 from prompt import Prompt
 from examples.cai_helpers import CAIMessage
-from exceptions import TruncationError
+from pp_exceptions import TruncationError
 
 CWD = os.path.dirname(__file__)
 

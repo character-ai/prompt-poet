@@ -9,7 +9,7 @@ from functools import reduce
 
 import yaml
 from examples import cai_helpers
-from exceptions import TruncationError
+from pp_exceptions import TruncationError
 from template import Template
 from tokenizer import AbstractTokenizer, get_default_tokenizer
 
