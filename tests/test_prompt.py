@@ -285,12 +285,17 @@ def test_truncation_failure():
         template_data={
             "num_hundred_sections": 9, 
             "num_ten_sections": 0,
+            "truncation_elements": [
+                {"tokens": [1]*10},
+            ]
         },
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
     )
     prompt.tokenize()
-    assert len(prompt.tokens) == 910
+    assert len(prompt.tokens) == 920
     with pytest.raises(TruncationError, match=r"Failed to successfully truncate the prompt to below token limit:.*"):
         prompt.truncate(token_limit=900, truncation_step=100)
+    # Ensure prompt state has been reverted.
+    assert len(prompt.tokens) == 920
