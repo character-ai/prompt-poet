@@ -62,7 +62,7 @@ prompt = Prompt(
     }
 )
 print(prompt.string)
->>> '<|bod|>You Balderdash are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|bom|>Jeff: Hi there!<|eom|><|bom|>Balderdash:'
+>>> 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.<|sep|>Jeff: Hi there!<|sep|>Balderdash:'
 ```
 
 Extract the raw tokens from the prompt.
