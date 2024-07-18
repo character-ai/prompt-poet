@@ -9,7 +9,7 @@
 {% for el in truncation_elements %}
 - name: {{ loop.index }}
   truncation_priority: 5
-  raw_string: dummy string
+  content: dummy string
   tokens: {{ el["tokens"] }}
 {% endfor %}
 

@@ -1,10 +1,10 @@
 {# Test conditionals and for loops. #}
 {% if conditional %}
 - name: conditional
-  raw_string: Raw string of conditional
+  content: Raw string of conditional
 {% endif %}
 
 {% for item in items %}
 - name: item_{{ loop.index }}
-  raw_string: Raw string of item {{ item }}
+  content: Raw string of item {{ item }}
 {% endfor %}

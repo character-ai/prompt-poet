@@ -22,7 +22,7 @@ class PromptPart:
     """Container representing repeated prompt parts from the template."""
 
     name: str
-    raw_string: str
+    content: str
     tokens: list[int] = None
     truncation_priority: int = 0
 
@@ -149,8 +149,8 @@ class Prompt:
         """
         if len(self._parts) > index:
             part = self._parts[index]
-            if part.raw_string.startswith(old):
-                self._parts[index].raw_string = f"{new}{part.raw_string.lstrip(old)}"
+            if part.content.startswith(old):
+                self._parts[index].content = f"{new}{part.content.lstrip(old)}"
                 self._tokenize_part(part, force_retokenize=True)
         else:
             raise IndexError(f"Index out of bounds: {index=} {len(self._parts)=}.")
@@ -233,13 +233,13 @@ class Prompt:
     def pretruncation_string(self) -> str:
         """The direct string representation of the prompt prior to truncation."""
         return reduce(
-            lambda acc, part: acc + part.raw_string, self.pretruncation_parts, ""
+            lambda acc, part: acc + part.content, self.pretruncation_parts, ""
         )
 
     @property
     def string(self) -> str:
         """The direct string representation of the final (truncated) prompt."""
-        return reduce(lambda acc, part: acc + part.raw_string, self._parts, "")
+        return reduce(lambda acc, part: acc + part.content, self._parts, "")
 
     @property
     def pretruncation_tokens(self) -> str:
@@ -404,7 +404,7 @@ class Prompt:
             self.logger.warning("Part already tokenized... skipping tokenization.")
             return
 
-        part.tokens = self._tokenizer.tokenize(part.raw_string)
+        part.tokens = self._tokenizer.tokenize(part.content)
         self._total_tokens += len(part.tokens)
 
     def _load_special_template_data(self):
@@ -437,7 +437,7 @@ class Prompt:
         self._parts = [None] * len(loaded_yaml)
         for idx, yaml_part in enumerate(loaded_yaml):
             part = PromptPart(**yaml_part)
-            self._cleanup_raw_string(part)
+            self._cleanup_content(part)
             self._parts[idx] = part
 
             # Tokens were passed in the yaml; ensure we track them.
@@ -447,10 +447,10 @@ class Prompt:
                 )
                 self._total_tokens += len(part.tokens)
 
-    def _cleanup_raw_string(self, part: PromptPart):
+    def _cleanup_content(self, part: PromptPart):
         """Remove whitespace and unescape special characters, if present."""
-        raw_string = part.raw_string.strip().replace(self._space_marker, " ")
-        part.raw_string = self._unescape_special_characters(raw_string)
+        content = part.content.strip().replace(self._space_marker, " ")
+        part.content = self._unescape_special_characters(content)
 
     def _escape_special_characters(self, string: str) -> str:
         """Escape sequences that will break yaml parsing."""
