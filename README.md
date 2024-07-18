@@ -25,6 +25,12 @@ pip install chartok@https://characterai.io/py_wheels/chartok/chartok-0.4.3-py3-n
 
 Represent prompt templates as valid YAML + Jinja2 python strings.
 
+Each part defined inside the template has the following attributes:
+- name: a unique name given to the prompt part used for readability and sometimes used functionally such as for truncation.
+- content: the string payload representing the content to be tokenized for this prompt part.
+- role: (optional) the role of the author of this message.
+- truncation_priority: (optional) the priority given to the prompt part during truncation. No value or a value of 0 means this part will never be truncated from the prompt.
+
 ```python
 from prompt_poet import Prompt
 

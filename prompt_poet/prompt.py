@@ -22,10 +22,19 @@ class PromptPart:
     """Container representing repeated prompt parts from the template."""
 
     name: str
+    """A unique name given to the prompt part used for readability and sometimes used functionally such as for truncation."""
+    
     content: str
+    """The string payload representing the content to be tokenized for this prompt part."""
+    
     role: str = "user"
+    """The role of the author of this message."""
+    
     tokens: list[int] = None
+    """The tokenized representation of the content."""
+    
     truncation_priority: int = 0
+    """The priority of this part for truncation. Higher values are truncated first."""
 
 
 @dataclass
