@@ -22,9 +22,19 @@ class PromptPart:
     """Container representing repeated prompt parts from the template."""
 
     name: str
+    """A unique name given to the prompt part used for readability and sometimes used functionally such as for truncation."""
+    
     content: str
+    """The string payload representing the content to be tokenized for this prompt part."""
+    
+    role: str = "user"
+    """The role of the author of this message."""
+    
     tokens: list[int] = None
+    """The tokenized representation of the content."""
+    
     truncation_priority: int = 0
+    """The priority of this part for truncation. Higher values are truncated first."""
 
 
 @dataclass
@@ -136,7 +146,7 @@ class Prompt:
         for part in self._parts:
             self._tokenize_part(part, force_retokenize=force_retokenize)
 
-        # Create a backup; used for guaranteeing idempotency in truncation.
+        # Create a backup; used for idempotency during truncation.
         if self._parts_bak is None:
             self._parts_bak = copy.deepcopy(self._parts)
 
@@ -178,6 +188,10 @@ class Prompt:
             raise ValueError(f"Invalid token limit: {token_limit=}")
         if truncation_step <= 0:
             raise ValueError(f"Invalid truncation step: {truncation_step=}")
+
+        # Ensure all parts have been tokenized.
+        if any(part.tokens is None for part in self._parts):
+            raise ValueError(f"Not all parts have been tokenized. Please tokenize first. {self._parts=}")
 
         self._reset_parts()
 
@@ -280,9 +294,9 @@ class Prompt:
         return self._tokenizer
 
     @property
-    def openai(self) -> str:
-        """The OpenAI API specification representation of the prompt."""
-        pass
+    def openai_messages(self) -> list[dict]:
+        """OpenAI API compatible messages representing the prompt."""
+        return [{"role": part.role, "content": part.content} for part in self._parts]
 
     @property
     def logger(self) -> str:
