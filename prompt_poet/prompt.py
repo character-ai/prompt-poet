@@ -23,6 +23,7 @@ class PromptPart:
 
     name: str
     content: str
+    role: str = "user"
     tokens: list[int] = None
     truncation_priority: int = 0
 
@@ -280,9 +281,9 @@ class Prompt:
         return self._tokenizer
 
     @property
-    def openai(self) -> str:
-        """The OpenAI API specification representation of the prompt."""
-        pass
+    def openai_messages(self) -> list[dict]:
+        """OpenAI API compatible messages representing the prompt."""
+        return [{"role": part.role, "content": part.content} for part in self._parts]
 
     @property
     def logger(self) -> str:
