@@ -30,32 +30,32 @@ from prompt_poet import Prompt
 
 raw_template = """
 - name: instructions
-  raw_string: |
+  content: |
     You are {{ character_name }}. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.
 
 {% if examples %}
 - name: examples_instruction
   truncation_priority: 3
-  raw_string: |
+  content: |
     {{ sep }}Use the following example dialogue to guide the conversation.
 {% endif %}
 
 {% for example in examples %}
 - name: example_{{ loop.index }}
   truncation_priority: 2
-  raw_string: |
+  content: |
     {{ sep }}{{ example }}
 {% endfor %}
 
 {% for message in messages %}
 - name: message_{{ loop.index }}
   truncation_priority: 1
-  raw_string: |
+  content: |
     {{ sep }}{{ message }}
 {% endfor %}
 
 - name: reply_prompt
-  raw_string: |
+  content: |
     {{ sep }}{{ character_name }}:
 """
 
@@ -114,32 +114,32 @@ A Template Registry is simply the concept of storing templates as files on disk.
 Filename: **chat_template.yml.j2**
 ```yaml
 - name: instructions
-  raw_string: |
+  content: |
     You are {{ character_name }}. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.
 
 {% if examples %}
 - name: examples_instruction
   truncation_priority: 3
-  raw_string: |
+  content: |
     {{ sep }}Use the following example dialogue to guide the conversation.
 {% endif %}
 
 {% for example in examples %}
 - name: example_{{ loop.index }}
   truncation_priority: 2
-  raw_string: |
+  content: |
     {{ sep }}{{ example }}
 {% endfor %}
 
 {% for message in messages %}
 - name: message_{{ loop.index }}
   truncation_priority: 1
-  raw_string: |
+  content: |
     {{ sep }}{{ message }}
 {% endfor %}
 
 - name: reply_prompt
-  raw_string: |
+  content: |
     {{ sep }}{{ character_name }}:
 ```
 
@@ -209,7 +209,7 @@ Prompt templates are expressive and human-readable files defined with a combinat
 
 Once the Jinja2 rendered, a prompt template is just YAML with a repeating sequence of simple parts. A part can consist of:
 - `name`: a unique name given to the prompt part used for readability and sometimes used functionally such as for truncation.
-- `raw_string`: the string payload representing the content to be tokenized for this prompt part.
+- `content`: the string payload representing the content to be tokenized for this prompt part.
 - `truncation_priority`: (optional) the priority given to the prompt part during truncation. No value or a value of 0 means this part will never be truncated from the prompt.
 
 ---
