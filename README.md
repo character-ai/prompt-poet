@@ -85,6 +85,9 @@ print(prompt.tokens)
 len(prompt.tokens)
 >>> 90
 
+prompt.openai_messages
+>>> [{'role': 'user', 'content': 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.'}, {'role': 'user', 'content': '<|sep|>Use the following example dialogue to guide the conversation.'}, {'role': 'user', 'content': '<|sep|>User: Hi Balderdash-- how can you help me?'}, {'role': 'user', 'content': '<|sep|>Balderdash: I specialize in homework help-- ask me anything!'}, {'role': 'user', 'content': '<|sep|>Jeff: Hi there!'}, {'role': 'user', 'content': '<|sep|>Balderdash:'}]
+
 # Play with the truncation algorithm by varying the `truncation_step` and `token_limit`.
 
 prompt.truncate(token_limit=80, truncation_step=5)
@@ -100,6 +103,10 @@ print(prompt.string)
 
 len(prompt.tokens)
 >>> 44
+
+# Once you are happy with the truncation; export the OpenAI API spec messages.
+prompt.openai_messages
+>>> [{'role': 'user', 'content': 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.'}, {'role': 'user', 'content': '<|sep|>Jeff: Hi there!'}, {'role': 'user', 'content': '<|sep|>Balderdash:'}]
 
 >>> prompt.truncate(token_limit=30, truncation_step=5)
 Traceback (most recent call last):

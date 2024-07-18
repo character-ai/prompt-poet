@@ -327,3 +327,28 @@ def test_openai_spec():
     assert "content" in prompt.openai_messages[0]
     assert "role" in prompt.openai_messages[0]
 
+def test_truncate_before_tokenize():
+    prompt = Prompt(
+        template_data={
+            "timestamp": "2024 06 24",
+            "username": "Jeff", 
+            "character": {
+                "title": "The \r title",
+                "description": "The description",
+                "definition": "The definition\nWith multiple lines\nIn the definition",
+                "participant__name": "Alice",
+            },
+            "persona_definition": "The persona \r definition",
+            "cai_messages": [
+                CAIMessage(author="Alice", text="The first \n \n message"),
+                CAIMessage(author="Jeff", text="The second \r message"),
+                CAIMessage(author="Alice", text="The third message", is_pinned=True),
+                CAIMessage(author="Jeff", text="The fourth ' message"),
+            ],
+            "reply_prompt": "Alice:"
+        },
+        template_path="cai.yml.j2",
+        from_examples=True,
+    )
+    with pytest.raises(ValueError, match=r"Not all parts have been tokenized. Please tokenize first.*"):
+        prompt.truncate(token_limit=1000, truncation_step=10)    

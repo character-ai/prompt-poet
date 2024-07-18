@@ -146,7 +146,7 @@ class Prompt:
         for part in self._parts:
             self._tokenize_part(part, force_retokenize=force_retokenize)
 
-        # Create a backup; used for guaranteeing idempotency in truncation.
+        # Create a backup; used for idempotency during truncation.
         if self._parts_bak is None:
             self._parts_bak = copy.deepcopy(self._parts)
 
@@ -188,6 +188,10 @@ class Prompt:
             raise ValueError(f"Invalid token limit: {token_limit=}")
         if truncation_step <= 0:
             raise ValueError(f"Invalid truncation step: {truncation_step=}")
+
+        # Ensure all parts have been tokenized.
+        if any(part.tokens is None for part in self._parts):
+            raise ValueError(f"Not all parts have been tokenized. Please tokenize first. {self._parts=}")
 
         self._reset_parts()
 
