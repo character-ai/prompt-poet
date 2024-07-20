@@ -79,7 +79,7 @@ print(prompt.tokens)
 len(prompt.tokens)
 >>> 90
 
-prompt.openai_messages
+prompt.messages
 >>> [{'role': 'user', 'content': 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.'}, {'role': 'user', 'content': '<|sep|>Use the following example dialogue to guide the conversation.'}, {'role': 'user', 'content': '<|sep|>User: Hi Balderdash-- how can you help me?'}, {'role': 'user', 'content': '<|sep|>Balderdash: I specialize in homework help-- ask me anything!'}, {'role': 'user', 'content': '<|sep|>Jeff: Hi there!'}, {'role': 'user', 'content': '<|sep|>Balderdash:'}]
 
 # Play with the truncation algorithm by varying the `truncation_step` and `token_limit`.
@@ -98,8 +98,8 @@ print(prompt.string)
 len(prompt.tokens)
 >>> 44
 
-# Once you are happy with the truncation; export the OpenAI API spec messages.
-prompt.openai_messages
+# Once you are happy with the truncation; export the prompt as messages for most major API providers.
+prompt.messages
 >>> [{'role': 'user', 'content': 'You are Balderdash. You are a chatbot created by Character.AI. You are meant to be helpful and never harmful to humans.'}, {'role': 'user', 'content': '<|sep|>Jeff: Hi there!'}, {'role': 'user', 'content': '<|sep|>Balderdash:'}]
 
 >>> prompt.truncate(token_limit=30, truncation_step=5)
@@ -205,7 +205,7 @@ print(prompt.string)
 2. Extensible: Make it as easy as possible to create new prompts for new use cases.
 3. Experimentation: Must be easy to experiment with wholly different prompt formats and content.
 
-Fundamentally, Prompt Poet is split into two layers -- a Templating Layer and a Logical Layer. We aim to keep a clear separation between these layers such that the Templating Layer exclusively handles the representation of the prompt and the Logical Layer handles the mechanics of constructing the prompt.
+Fundamentally, Prompt Poet is split into two layers -- a Templating Layer and a Compilation Layer. We aim to keep a clear separation between these layers such that the Templating Layer exclusively handles the representation of the prompt and the Compilation Layer handles the mechanics of constructing the prompt.
 
 ---
 
@@ -221,9 +221,9 @@ Once the Jinja2 rendered, a prompt template is just YAML with a repeating sequen
 
 ---
 
-### Logical Layer
+### Compilation Layer
 
-The Logical Layer renders templates and constructs the final prompt in the form of a string or tokens if desirable.
+The Compilation Layer renders templates and constructs the final prompt in the form of a string or tokens if desirable.
 
 #### 1. Rendering:
 The rendering process takes a template and fills in the necessary data to produce a final prompt. This involves:
@@ -241,7 +241,8 @@ Truncation ensures the prompt fits within the specified `token_limit`. This invo
 
 ### Alternatives considered
 - [Priompt](https://github.com/anysphere/priompt): Priompt (priority + prompt) is a JSX-based prompting library. It uses priorities to decide what to include in the context window. This project achieves a similar goal in separating a templating layer from a logical construction layer written in and compatible with TypeScript-based usage.
-- [Langchain](https://github.com/langchain-ai/langchain): PromptTemplate, AIMessage, SystemMessage, and HumanMessage abstractions. At its core it uses f-strings wrapped in a Python class, which are not expressive enough as they do not handle control flow well.
-- [LMQL](https://github.com/eth-sri/lmql): Not very readable, non-trivial to reason about what the final interpolated prompt would look like.
-Raw Python f-strings: Better readability but not very expressive in terms of control flow.
-Several OSS “prompt management” solutions: Pezzo, Agenta, PromptHub (paid), Langflow. These all miss the mark in terms of extensibility of the core templating language and infrastructure and focus on using external APIs rather than needing to truncate and tokenize, which is crucial for us as we host our own models.
+- [Langchain](https://github.com/langchain-ai/langchain): PromptTemplate, AIMessage, SystemMessage, and HumanMessage abstractions. At its core it uses f-strings wrapped in a Python class which makes it difficult to express control flow well.
+- [LMQL](https://github.com/eth-sri/lmql): Makes it tricky to read prompt templates and reason about what the final prompt should look like.
+- [dspy](https://github.com/stanfordnlp/dspy): Provides a great way of automagically optimizing prompts for different models though lacks deterministic control of the prompt important for things like caching and high-throughput, low latency production systems.
+- Raw Python f-strings: Better readability but not very expressive or structured.
+- Several OSS “prompt management” solutions: Pezzo, Agenta, PromptHub (paid), Langflow– we found it difficult to extend the core templating languages.
