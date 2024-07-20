@@ -11,7 +11,8 @@ import yaml
 from examples import cai_helpers
 from pp_exceptions import TruncationError
 from template import Template
-from tokenizer import AbstractTokenizer, get_default_tokenizer
+from tokenizer import get_encode_func
+from typing import Callable
 
 SPACE_MARKER = "<|space|>"
 
@@ -57,9 +58,9 @@ class Prompt:
         file.
     :param logger: An optional logger to be used by this module and passed to
         downstream modules.
-    :param tokenizer: An optional tokenizer to be used by this module. If not provided,
-        the default tokenizer will be used if the caller attempts to tokenize the
-        prompt.
+    :param encode_func: An optional encoding function used to encode strings into
+        tokens. If not provided, the default encoding function will be used.
+    :param tiktoken_encoding_name: The name of the tiktoken encoding to use.
     :param token_limit: An optional maximum number of tokens used by this prompt
         _after_ truncation via `truncate`. A value of -1 means no truncation will
         take place.
@@ -87,7 +88,8 @@ class Prompt:
         package_name: str = None,
         raw_template: str = None,
         logger: logging.LoggerAdapter = None,
-        tokenizer: AbstractTokenizer = None,
+        encode_func: Callable[[str], list[int]] = None,
+        tiktoken_encoding_name: str = None,
         token_limit: int = -1,
         truncation_step: int = None,
         from_cache: bool = False,
@@ -121,7 +123,8 @@ class Prompt:
         self._escaped_carriage_return = escaped_carriage_return
         self._single_quote = single_quote
         self._escaped_single_quote = escaped_single_quote
-        self._tokenizer = tokenizer
+        self._encode_func = encode_func
+        self._tiktoken_encoding_name = tiktoken_encoding_name
         self._truncation_step = truncation_step
 
         self._rendered_template = None
@@ -180,10 +183,10 @@ class Prompt:
             return
 
         # Ensure we have valid values for truncation.
-        if token_limit <= 0:
-            raise ValueError(f"Invalid token limit: {token_limit=}")
-        if truncation_step <= 0:
-            raise ValueError(f"Invalid truncation step: {truncation_step=}")
+        if token_limit < 1:
+            raise ValueError(f"token_limit must be greater than 0: {token_limit=}")
+        if truncation_step < 1:
+            raise ValueError(f"truncation_step must be greater than 0: {truncation_step=}")
 
         # Ensure all parts have been tokenized.
         if any(part.tokens is None for part in self._parts):
@@ -248,12 +251,12 @@ class Prompt:
 
     @property
     def string(self) -> str:
-        """The direct string representation of the final (truncated) prompt."""
+        """The prompt represented as a string."""
         return reduce(lambda acc, part: acc + part.content, self._parts, "")
 
     @property
     def pretruncation_tokens(self) -> str:
-        """The direct token representation of the prompt prior to truncation."""
+        """The pre-truncated prompt represented as a list of tokens."""
         if not self._cached_pretruncation_tokens:
             try:
                 self._cached_pretruncation_tokens = reduce(
@@ -268,7 +271,7 @@ class Prompt:
 
     @property
     def tokens(self) -> str:
-        """The direct token representation of the prompt."""
+        """The prompt represented as a list of tokens."""
         if not self._cached_tokens:
             try:
                 self._cached_tokens = reduce(
@@ -282,16 +285,8 @@ class Prompt:
         return self._cached_tokens
 
     @property
-    def tokenizer(self) -> AbstractTokenizer:
-        """The tokenizer used to tokenize the prompt."""
-        if not self._tokenizer:
-            self._tokenizer = get_default_tokenizer()
-
-        return self._tokenizer
-
-    @property
-    def openai_messages(self) -> list[dict]:
-        """OpenAI API compatible messages representing the prompt."""
+    def messages(self) -> list[dict]:
+        """The prompt represented as a list of messages."""
         return [{"role": part.role, "content": part.content} for part in self._parts]
 
     @property
@@ -398,14 +393,11 @@ class Prompt:
         # Invalidate the cached tokens.
         self._cached_tokens = None
 
-        # Lazy load the tokenizer.
-        if self._tokenizer is None:
-            try:
-                self._tokenizer = get_default_tokenizer()
-            except ImportError as ex:
-                raise ImportError(
-                    f"Error loading default tokenizer. Consider providing your own tokenizer Prompt(tokenizer=your_tokenizer). {ex=}."
-                )
+        # Lazy load.
+        if self._encode_func is None:
+            self._encode_func = get_encode_func(
+                encoding_name=self._tiktoken_encoding_name
+            )
 
         # Avoid retokenizing the part if it has already been tokenized.
         if part.tokens and force_retokenize:
@@ -414,7 +406,7 @@ class Prompt:
             self.logger.warning("Part already tokenized... skipping tokenization.")
             return
 
-        part.tokens = self._tokenizer.tokenize(part.content)
+        part.tokens = self._encode_func(part.content)
         self._total_tokens += len(part.tokens)
 
     def _load_special_template_data(self):
