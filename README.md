@@ -15,12 +15,6 @@ Formally, Prompt Poet considers a prompt as P = f(T,D,L) where P is the final pr
 pip install prompt-poet
 ```
 
-> **Optional**: if you want tokenization capabilities you will need to install the default Character.AI tokenizer separately (below) or provide your own. See `AbstractTokenizer` in tokenizer.py for the necessary tokenizer interface.
-
-```shell
-pip install chartok@https://characterai.io/py_wheels/chartok/chartok-0.4.3-py3-none-any.whl
-```
-
 ### Basic Usage
 
 Represent prompt templates as valid YAML + Jinja2 python strings.
@@ -247,9 +241,7 @@ Truncation ensures the prompt fits within the specified `token_limit`. This invo
 
 ### Alternatives considered
 - [Priompt](https://github.com/anysphere/priompt): Priompt (priority + prompt) is a JSX-based prompting library. It uses priorities to decide what to include in the context window. This project achieves a similar goal in separating a templating layer from a logical construction layer written in and compatible with TypeScript-based usage.
-- [Langchain](https://github.com/langchain-ai/langchain): PromptTemplate, AIMessage, SystemMessage, and HumanMessage abstractions. Basically just f-strings wrapped in a Python class, not expressive enough as it does not handle control flow well.
+- [Langchain](https://github.com/langchain-ai/langchain): PromptTemplate, AIMessage, SystemMessage, and HumanMessage abstractions. At its core it uses f-strings wrapped in a Python class, which are not expressive enough as they do not handle control flow well.
 - [LMQL](https://github.com/eth-sri/lmql): Not very readable, non-trivial to reason about what the final interpolated prompt would look like.
-- Raw Python f-strings: Better readability but not very expressive.
-- Jinja: Probably the best standalone bet found so far but leaves several things to be desired. See an example here.
-- YAML: Could also work by rolling our own basic interpreter. See an example here.
-- Several OSS “prompt management” solutions: Pezzo, Agenta, PromptHub (paid), Langflow. These all miss the mark in terms of extensibility of the core templating language and infrastructure and focus on using external APIs rather than needing to truncate and tokenize, which is crucial for us as we host our own models.
+Raw Python f-strings: Better readability but not very expressive in terms of control flow.
+Several OSS “prompt management” solutions: Pezzo, Agenta, PromptHub (paid), Langflow. These all miss the mark in terms of extensibility of the core templating language and infrastructure and focus on using external APIs rather than needing to truncate and tokenize, which is crucial for us as we host our own models.
