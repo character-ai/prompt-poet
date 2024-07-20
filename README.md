@@ -15,12 +15,6 @@ Formally, Prompt Poet considers a prompt as P = f(T,D,L) where P is the final pr
 pip install prompt-poet
 ```
 
-> **Optional**: if you want tokenization capabilities you will need to install the default Character.AI tokenizer separately (below) or provide your own. See `AbstractTokenizer` in tokenizer.py for the necessary tokenizer interface.
-
-```shell
-pip install chartok@https://characterai.io/py_wheels/chartok/chartok-0.4.3-py3-none-any.whl
-```
-
 ### Basic Usage
 
 Represent prompt templates as valid YAML + Jinja2 python strings.
