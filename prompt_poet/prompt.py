@@ -14,7 +14,6 @@ from template import Template
 from tokenizer import AbstractTokenizer, get_default_tokenizer
 
 SPACE_MARKER = "<|space|>"
-DEFAULT_TRUNCATION_STEP = 1000
 
 
 @dataclass
@@ -65,8 +64,7 @@ class Prompt:
         _after_ truncation via `truncate`. A value of -1 means no truncation will
         take place.
     :param truncation_step: Controls how aggressively to truncate with additional buffer.
-        Set to 1 to avoid truncating more than you strictly need to to meet the
-        `token_limit`.
+        Set to 1 for naive truncation; greater than 1 for cache-aware truncation.
     :param from_cache: A boolean indicating whether to load a cached value of the
         template, if present.
     :param from_examples: A boolean indicating whether to load the template from the
@@ -114,9 +112,6 @@ class Prompt:
         self._template_data = copy.deepcopy(template_data)
         self._provided_logger = logger
         self._token_limit = token_limit
-        self._truncation_step = (
-            DEFAULT_TRUNCATION_STEP if truncation_step is None else truncation_step
-        )
         self._from_cache = from_cache
         self._from_examples = from_examples
         self._space_marker = space_marker
@@ -127,6 +122,7 @@ class Prompt:
         self._single_quote = single_quote
         self._escaped_single_quote = escaped_single_quote
         self._tokenizer = tokenizer
+        self._truncation_step = truncation_step
 
         self._rendered_template = None
         self._parts = None
