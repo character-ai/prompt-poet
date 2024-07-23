@@ -23,7 +23,7 @@ Each part defined inside the template has the following attributes:
 - name: a unique name given to the prompt part used for readability and sometimes used functionally such as for truncation.
 - content: the string payload representing the content to be tokenized for this prompt part.
 - role: (optional) the role of the author of this message.
-- truncation_priority: (optional) the priority given to the prompt part during truncation. No value or a value of 0 means this part will never be truncated from the prompt.
+- truncation_priority: (optional) the priority given to the prompt part during truncation. No value or a value of 0 means this part will never be truncated from the prompt. If no parts have truncation_priority set and the token_limit is exceeded, truncation will fail. Specifically, if after truncation the prompt tokens exceed the token limit prompt.truncate() will raise. For two parts with the same truncation priority, they will be truncated in order in which they appear in the template. 
 
 ```python
 from prompt_poet import Prompt
@@ -113,7 +113,27 @@ len(prompt.tokens)
 >>> 90
 ```
 
-> **Note**: notice the `truncation_priority` optionally set on each part in the template. Not setting a `truncation_priority` or setting it to 0 on a given part will preclude it from truncation. If no parts have `truncation_priority` set and the token_limit is exceeded, truncation will fail. Specifically, if after truncation the prompt tokens exceed the token limit `prompt.truncate()` will raise.
+### Custom Encoding Function
+By default Prompt Poet will use the TikToken “o200k_base” tokenizer although alternate encoding names may be provided in the top-level `tiktoken_encoding_name`. Alternatively, users can provide their own encode function with the top-level `encode_func: Callable[[str], list[int]]`.
+
+```python
+from tiktoken import get_encoding
+encode_func = get_encoding("o200k_base")
+
+prompt = Prompt(
+    raw_template=raw_template,
+    template_data={
+        "sep": "<|sep|>",
+        "character_name": "Balderdash",
+        "examples": ["User: Hi Balderdash-- how can you help me?", "Balderdash: I specialize in homework help-- ask me anything!"],
+        "messages": ["Jeff: Hi there!"]
+    },
+    encode_func=encode_func
+)
+prompt.tokenize()
+prompt.tokens
+>>> [3616, 413, 9772, 602, 44641, 23, 686, 413, 267, 6630, 10780, 4630, 539, 26865, 23, 27872, 23, 686, 413, 3662, 296, 337, 6498, 308, 1046, 20577, 296, 6954, 23, 1432, 84900, 1429, 35545, 274, 3092, 2314, 14951, 296, 8104, 274, 5637, 23, 1432, 84900, 1429, 17761, 35, 5251, 9772, 602, 44641, 456, 692, 473, 326, 1067, 454, 40, 1432, 84900, 1429, 44762, 602, 44641, 35, 297, 57804, 303, 23842, 1067, 456, 1338, 454, 1340, 10, 1432, 84900, 1429, 40714, 35, 5251, 604, 10, 1432, 84900, 1429, 44762, 602, 44641, 35]
+```
 
 ### Using a Template Registry
 A Template Registry is simply the concept of storing templates as files on disk. In using a Template Registry you can isolate template files from your python code and load these files directly from disk. In production systems, these template files can optionally be loaded from an in-memory cache on successive uses, saving on disk I/O. In the future a Template Registry may become a first-class citizen of Prompt Poet.
