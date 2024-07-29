@@ -16,25 +16,20 @@ from typing import Callable
 
 SPACE_MARKER = "<|space|>"
 
-
 @dataclass
 class PromptPart:
     """Container representing repeated prompt parts from the template."""
 
     name: str
-    """A unique name given to the prompt part used for readability and sometimes used functionally such as for truncation."""
-    
+    """A clear, human-readable identifier for the part."""
     content: str
-    """The string payload representing the content to be tokenized for this prompt part."""
-    
+    """The actual string payload that forms part of the prompt."""
     role: str = "user"
-    """The role of the author of this message."""
-    
+    """Specifies the role of the participant."""
     tokens: list[int] = None
-    """The tokenized representation of the content."""
-    
+    """The tokenized encoding of the content."""
     truncation_priority: int = 0
-    """The priority of this part for truncation. Higher values are truncated first."""
+    """Determines the order of truncation when necessary."""
 
 
 @dataclass
