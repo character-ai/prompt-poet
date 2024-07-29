@@ -1,14 +1,21 @@
 import os
 import pytest
-import jinja2 as j2
-from prompt import Prompt
+
 from examples.cai_helpers import CAIMessage
+import jinja2 as j2
 from pp_exceptions import TruncationError
+from prompt import Prompt
+from tiktoken import get_encoding
 
 CWD = os.path.dirname(__file__)
+TIKTOKEN_ENCODING_NAME = "o200k_base"
+ENCODE_FUNC = get_encoding(TIKTOKEN_ENCODING_NAME).encode
+
 
 def test_simple_prompt_sad():
-    with pytest.raises(ValueError, match="`token_limit` is a reserved key in the template data."):
+    with pytest.raises(
+        ValueError, match="`token_limit` is a reserved key in the template data."
+    ):
         _ = Prompt(
             template_data={"var1": "foobar", "token_limit": 10},
             template_path=os.path.abspath(
@@ -16,14 +23,18 @@ def test_simple_prompt_sad():
             ),
         )
 
-    with pytest.raises(ValueError, match="`escape_special_characters` is a reserved key in the template data."):
+    with pytest.raises(
+        ValueError,
+        match="`escape_special_characters` is a reserved key in the template data.",
+    ):
         _ = Prompt(
             template_data={"var1": "foobar", "escape_special_characters": lambda x: x},
             template_path=os.path.abspath(
                 os.path.join(CWD, "templates", "simple_prompt.yml.j2")
             ),
         )
-    
+
+
 def test_simple_prompt_happy():
     prompt = Prompt(
         template_data={"var1": "foobar"},
@@ -41,6 +52,7 @@ def test_simple_prompt_happy():
     )
     assert prompt.string == "Raw string of the first part foobar"
 
+
 def test_section_prompt_happy():
     prompt = Prompt(
         template_data={"var1": "foobar"},
@@ -50,6 +62,7 @@ def test_section_prompt_happy():
     )
     assert prompt.string == "Raw string of section_aRaw string of section_b"
 
+
 def test_macros_prompt_happy():
     prompt = Prompt(
         template_data={"var1": "foobar"},
@@ -57,7 +70,11 @@ def test_macros_prompt_happy():
             os.path.join(CWD, "templates", "macros_prompt.yml.j2"),
         ),
     )
-    assert prompt.string == "<|beginningofdialog|>Raw string of first part<|endofmessage|><|beginningofmessage|>Raw string of second part<|endofmessage|>"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>Raw string of first part<|endofmessage|><|beginningofmessage|>Raw string of second part<|endofmessage|>"
+    )
+
 
 def test_function_prompt_happy():
     prompt = Prompt(
@@ -72,6 +89,7 @@ def test_function_prompt_happy():
     )
     assert prompt.string == "foobar"
 
+
 def test_template_not_found():
     with pytest.raises(j2.TemplateNotFound):
         _ = Prompt(
@@ -79,8 +97,8 @@ def test_template_not_found():
             template_path=os.path.abspath(
                 os.path.join(CWD, "templates", "non_existent_template.yml.j2")
             ),
-
         )
+
 
 def test_control_flow_happy():
     prompt = Prompt(
@@ -114,11 +132,12 @@ def test_control_flow_happy():
     assert "Raw string of item item2" in prompt.string
     assert "Raw string of item item3" in prompt.string
 
+
 def test_example_cai_template_happy():
     prompt = Prompt(
         template_data={
             "timestamp": "2024 06 24",
-            "username": "Jeff", 
+            "username": "Jeff",
             "character": {
                 "title": "The title",
                 "description": "The description",
@@ -132,19 +151,22 @@ def test_example_cai_template_happy():
                 CAIMessage(author="Alice", text="The third message", is_pinned=True),
                 CAIMessage(author="Jeff", text="The fourth message"),
             ],
-            "reply_prompt": "Alice:"
+            "reply_prompt": "Alice:",
         },
         template_path="cai.yml.j2",
         from_examples=True,
         token_limit=100,
     )
-    assert prompt.string == "<|beginningofdialog|>2024 06 24 Alice: The title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first message<|endofmessage|><|beginningofmessage|>Jeff: The second message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth message<|endofmessage|><|beginningofmessage|>Alice:"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>2024 06 24 Alice: The title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first message<|endofmessage|><|beginningofmessage|>Jeff: The second message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth message<|endofmessage|><|beginningofmessage|>Alice:"
+    )
 
     # With escaped special characters.
     prompt = Prompt(
         template_data={
             "timestamp": "2024 06 24",
-            "username": "Jeff", 
+            "username": "Jeff",
             "character": {
                 "title": "The \r title",
                 "description": "The description",
@@ -158,19 +180,22 @@ def test_example_cai_template_happy():
                 CAIMessage(author="Alice", text="The third message", is_pinned=True),
                 CAIMessage(author="Jeff", text="The fourth ' message"),
             ],
-            "reply_prompt": "Alice:"
+            "reply_prompt": "Alice:",
         },
         template_path="cai.yml.j2",
         from_examples=True,
         token_limit=100,
     )
-    assert prompt.string == "<|beginningofdialog|>2024 06 24 Alice: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>2024 06 24 Alice: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    )
 
     # Using .lreplace_at().
     prompt = Prompt(
         template_data={
             "timestamp": "2024 06 24",
-            "username": "Jeff", 
+            "username": "Jeff",
             "character": {
                 "title": "The \r title",
                 "description": "The description",
@@ -184,18 +209,27 @@ def test_example_cai_template_happy():
                 CAIMessage(author="Alice", text="The third message", is_pinned=True),
                 CAIMessage(author="Jeff", text="The fourth ' message"),
             ],
-            "reply_prompt": "Alice:"
+            "reply_prompt": "Alice:",
         },
         template_path="cai.yml.j2",
         from_examples=True,
         token_limit=100,
     )
     prompt.lreplace_at(old=" Alice", new=" Bob", index=1)
-    assert prompt.string == "<|beginningofdialog|>2024 06 24 Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>2024 06 24 Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    )
     prompt.lreplace_at(old=" ", new="<|beginningofmessage|>", index=1)
-    assert prompt.string == "<|beginningofdialog|>2024 06 24<|beginningofmessage|>Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>2024 06 24<|beginningofmessage|>Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    )
     prompt.lreplace_at(old="<|beginningofmessage|>", new=" ", index=1)
-    assert prompt.string == "<|beginningofdialog|>2024 06 24 Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    assert (
+        prompt.string
+        == "<|beginningofdialog|>2024 06 24 Bob: The \r title - The description<|endofmessage|><|beginningofmessage|>narrator: The definition<|endofmessage|><|beginningofmessage|>narrator: With multiple lines<|endofmessage|><|beginningofmessage|>narrator: In the definition<|endofmessage|><|beginningofmessage|>Jeff: The persona \r definition<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Alice: The first \n \n message<|endofmessage|><|beginningofmessage|>Jeff: The second \r message<|endofmessage|><|beginningofmessage|>Alice: The third message<|endofmessage|><|beginningofmessage|>Jeff: The fourth ' message<|endofmessage|><|beginningofmessage|>Alice:"
+    )
     with pytest.raises(IndexError, match="Index out of bounds:"):
         prompt.lreplace_at(old="<|beginningofmessage|>", new=" ", index=999)
 
@@ -203,21 +237,22 @@ def test_example_cai_template_happy():
 def test_truncation_template_happy():
     prompt = Prompt(
         template_data={
-            "num_hundred_sections": 9, 
+            "num_hundred_sections": 9,
             "num_ten_sections": 0,
             "truncation_elements": [
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10}
-            ]
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+            ],
         },
+        encode_func=ENCODE_FUNC,
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
@@ -235,27 +270,28 @@ def test_truncation_template_happy():
 
     prompt = Prompt(
         template_data={
-            "num_hundred_sections": 9, 
+            "num_hundred_sections": 9,
             "num_ten_sections": 0,
             "truncation_elements": [
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*10},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*100},
-                {"tokens": [1]*10},
-            ]
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 10},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 100},
+                {"tokens": [1] * 10},
+            ],
         },
+        encode_func=ENCODE_FUNC,
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
@@ -271,6 +307,7 @@ def test_truncation_template_happy():
     prompt.truncate(token_limit=1333, truncation_step=16)
     assert len(prompt.tokens) == 1320
 
+
 def test_escape_characters():
     # Implicitly assert that no YAML parsing exception is raised.
     _ = Prompt(
@@ -280,31 +317,37 @@ def test_escape_characters():
         ),
     )
 
+
 def test_truncation_failure():
     prompt = Prompt(
         template_data={
-            "num_hundred_sections": 9, 
+            "num_hundred_sections": 9,
             "num_ten_sections": 0,
             "truncation_elements": [
-                {"tokens": [1]*10},
-            ]
+                {"tokens": [1] * 10},
+            ],
         },
+        encode_func=ENCODE_FUNC,
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
     )
     prompt.tokenize()
     assert len(prompt.tokens) == 920
-    with pytest.raises(TruncationError, match=r"Failed to successfully truncate the prompt to below token limit:.*"):
+    with pytest.raises(
+        TruncationError,
+        match=r"Failed to successfully truncate the prompt to below token limit:.*",
+    ):
         prompt.truncate(token_limit=900, truncation_step=100)
     # Ensure prompt state has been reverted.
     assert len(prompt.tokens) == 920
 
-def test_openai_spec():
+
+def test_output_messages():
     prompt = Prompt(
         template_data={
             "timestamp": "2024 06 24",
-            "username": "Jeff", 
+            "username": "Jeff",
             "character": {
                 "title": "The \r title",
                 "description": "The description",
@@ -318,20 +361,21 @@ def test_openai_spec():
                 CAIMessage(author="Alice", text="The third message", is_pinned=True),
                 CAIMessage(author="Jeff", text="The fourth ' message"),
             ],
-            "reply_prompt": "Alice:"
+            "reply_prompt": "Alice:",
         },
         template_path="cai.yml.j2",
         from_examples=True,
-    )    
-    assert len(prompt.openai_messages) == 12
-    assert "content" in prompt.openai_messages[0]
-    assert "role" in prompt.openai_messages[0]
+    )
+    assert len(prompt.messages) == 12
+    assert "content" in prompt.messages[0]
+    assert "role" in prompt.messages[0]
+
 
 def test_truncate_before_tokenize():
     prompt = Prompt(
         template_data={
             "timestamp": "2024 06 24",
-            "username": "Jeff", 
+            "username": "Jeff",
             "character": {
                 "title": "The \r title",
                 "description": "The description",
@@ -345,10 +389,70 @@ def test_truncate_before_tokenize():
                 CAIMessage(author="Alice", text="The third message", is_pinned=True),
                 CAIMessage(author="Jeff", text="The fourth ' message"),
             ],
-            "reply_prompt": "Alice:"
+            "reply_prompt": "Alice:",
         },
         template_path="cai.yml.j2",
         from_examples=True,
     )
-    with pytest.raises(ValueError, match=r"Not all parts have been tokenized. Please tokenize first.*"):
-        prompt.truncate(token_limit=1000, truncation_step=10)    
+    with pytest.raises(
+        ValueError, match=r"Not all parts have been tokenized. Please tokenize first.*"
+    ):
+        prompt.truncate(token_limit=1000, truncation_step=10)
+
+
+def test_truncation_step_zero():
+    prompt = Prompt(
+        template_data={
+            "timestamp": "2024 06 24",
+            "username": "Jeff",
+            "character": {
+                "title": "The \r title",
+                "description": "The description",
+                "definition": "The definition\nWith multiple lines\nIn the definition",
+                "participant__name": "Alice",
+            },
+            "persona_definition": "The persona \r definition",
+            "cai_messages": [
+                CAIMessage(author="Alice", text="The first \n \n message"),
+                CAIMessage(author="Jeff", text="The second \r message"),
+                CAIMessage(author="Alice", text="The third message", is_pinned=True),
+                CAIMessage(author="Jeff", text="The fourth ' message"),
+            ],
+            "reply_prompt": "Alice:",
+        },
+        template_path="cai.yml.j2",
+        from_examples=True,
+        truncation_step=0,
+        encode_func=ENCODE_FUNC,
+    )
+    prompt.tokenize()
+    with pytest.raises(ValueError, match=r"truncation_step must be greater than 0.*"):
+        prompt.truncate(token_limit=1000)
+
+
+def test_tiktoken_encoding_name():
+    prompt = Prompt(
+        template_data={
+            "timestamp": "2024 06 24",
+            "username": "Jeff",
+            "character": {
+                "title": "The \r title",
+                "description": "The description",
+                "definition": "The definition\nWith multiple lines\nIn the definition",
+                "participant__name": "Alice",
+            },
+            "persona_definition": "The persona \r definition",
+            "cai_messages": [
+                CAIMessage(author="Alice", text="The first \n \n message"),
+                CAIMessage(author="Jeff", text="The second \r message"),
+                CAIMessage(author="Alice", text="The third message", is_pinned=True),
+                CAIMessage(author="Jeff", text="The fourth ' message"),
+            ],
+            "reply_prompt": "Alice:",
+        },
+        template_path="cai.yml.j2",
+        from_examples=True,
+        tiktoken_encoding_name="r50k_base",
+    )
+    prompt.tokenize()
+    assert prompt.tokens

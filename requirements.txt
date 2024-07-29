@@ -1,6 +1,6 @@
 build==1.2.1
-chartok @ https://characterai.io/py_wheels/chartok/chartok-0.4.3-py3-none-any.whl
+cachetools==5.3.3
 jinja2>=3.0.0
 PyYaml>=6.0.0
+tiktoken==0.7.0
 twine==5.0.0
-cachetools==5.3.3
