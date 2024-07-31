@@ -25,7 +25,7 @@ setup(
     ],
     author="James Groeneveld",
     author_email="james@character.ai",
-    description="The simplest way of using control flow (like if statements and for loops) to build production-grade prompts for LLMs.",
+    description="Streamlines and simplifies prompt design for both developers and non-technical users with a low code approach.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/character-ai/prompt-poet",
