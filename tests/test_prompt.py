@@ -256,6 +256,7 @@ def test_truncation_template_happy():
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
+        allow_token_overrides=True,
     )
     prompt.tokenize()
     assert len(prompt.tokens) == 1010
@@ -295,6 +296,7 @@ def test_truncation_template_happy():
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
+        allow_token_overrides=True,
     )
     prompt.tokenize()
     assert len(prompt.tokens) == 1970
@@ -331,6 +333,7 @@ def test_truncation_failure():
         template_path=os.path.abspath(
             os.path.join(CWD, "templates", "truncation_prompt.yml.j2"),
         ),
+        allow_token_overrides=True,
     )
     prompt.tokenize()
     assert len(prompt.tokens) == 920
