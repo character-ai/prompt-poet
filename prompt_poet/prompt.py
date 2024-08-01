@@ -26,7 +26,7 @@ class PromptPart:
     """The actual string payload that forms part of the prompt."""
     role: str = "user"
     """Specifies the role of the participant."""
-    tokens: list[int] = None
+    tokens: list[int] | None = None
     """The tokenized encoding of the content."""
     truncation_priority: int = 0
     """Determines the order of truncation when necessary."""
@@ -74,19 +74,21 @@ class Prompt:
         template.
     :single_quote: The representation of a single quote in the template.
     :escaped_single_quote: The escaped representation of a single quote in the template.
+    :allow_token_overrides: A boolean indicating whether to allow token encoding to be set
+        in the template. Not safe for production use.
     """
 
     def __init__(
         self,
         template_data: dict,
-        template_path: str = None,
-        package_name: str = None,
-        raw_template: str = None,
-        logger: logging.LoggerAdapter = None,
-        encode_func: Callable[[str], list[int]] = None,
-        tiktoken_encoding_name: str = None,
+        template_path: str | None = None,
+        package_name: str | None = None,
+        raw_template: str | None = None,
+        logger: logging.LoggerAdapter | None = None,
+        encode_func: Callable[[str], list[int]] | None = None,
+        tiktoken_encoding_name: str | None = None,
         token_limit: int = -1,
-        truncation_step: int = None,
+        truncation_step: int | None = None,
         from_cache: bool = False,
         from_examples: bool = False,
         space_marker: str = SPACE_MARKER,
@@ -96,6 +98,7 @@ class Prompt:
         escaped_carriage_return: str = "\\r",
         single_quote: str = "'",
         escaped_single_quote: str = "'",
+        allow_token_overrides: bool = False,
     ):
         """Initialize the prompt object."""
         self._template = Template(
@@ -121,6 +124,7 @@ class Prompt:
         self._encode_func = encode_func
         self._tiktoken_encoding_name = tiktoken_encoding_name
         self._truncation_step = truncation_step
+        self._allow_token_overrides = allow_token_overrides
 
         self._rendered_template = None
         self._parts = None
@@ -430,10 +434,14 @@ class Prompt:
         self._rendered_template = self._template.render_template(self._template_data)
         loaded_yaml = yaml.load(self._rendered_template, Loader=yaml.CSafeLoader)
 
-        # TODO: Process parts in parallel with concurrent.futures.
+        # TODO: Process parts in parallel for speedup.
         self._parts = [None] * len(loaded_yaml)
         for idx, yaml_part in enumerate(loaded_yaml):
             part = PromptPart(**yaml_part)
+            if not self._allow_token_overrides and part.tokens is not None:
+                raise ValueError(
+                    "Token encoding is not allowed to be set in the template."
+                )
             self._cleanup_content(part)
             self._parts[idx] = part
 
