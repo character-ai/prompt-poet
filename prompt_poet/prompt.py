@@ -455,12 +455,12 @@ class Prompt:
                 )
                 self._total_tokens += len(part.tokens)
     
-    def _validate_template_replacements(self, yaml_part: PromptPart):
+    def _validate_template_replacements(self, part: PromptPart):
         """Validate that all required keys in the expected_template_data_keys are present in template_data."""
-        if yaml_part.expected_template_data_keys:
-            missing_keys = [key for key in yaml_part.expected_template_data_keys if key not in self._template_data]
+        if part.expected_template_data_keys:
+            missing_keys = [key for key in part.expected_template_data_keys if key not in self._template_data]
             if missing_keys:
-                raise ValueError(f"Missing replacement values for keys: {missing_keys}")
+                raise ValueError(f"Missing replacement values for keys: {missing_keys=} {part=}")
 
     def _cleanup_content(self, part: PromptPart):
         """Remove whitespace and unescape special characters, if present."""
