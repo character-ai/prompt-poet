@@ -1,3 +1,5 @@
+[![Downloads](https://static.pepy.tech/badge/prompt-poet)](https://pepy.tech/project/prompt-poet)
+
 # Prompt Poet
 
 Prompt Poet streamlines and simplifies prompt design for both developers and non-technical users with its low code approach. Using a mix of YAML and Jinja2, Prompt Poet allows for flexible, dynamic prompt creation, enhancing the efficiency and quality of interactions with AI models. It saves time on engineering string manipulations, enabling everyone to focus more on crafting the optimal prompts for their users.
