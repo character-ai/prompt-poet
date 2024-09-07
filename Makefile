@@ -4,7 +4,7 @@ VENV1 := .pp
 # Setup virtual environments
 .PHONY: setup
 setup:
-	python3.11 -m venv --clear $(VENV1)
+	python3.12 -m venv --clear $(VENV1)
 
 .PHONY: deps
 deps:
