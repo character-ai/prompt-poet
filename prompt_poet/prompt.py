@@ -463,6 +463,9 @@ class Prompt:
             string.replace(self._newline, self._escaped_newline)
             .replace(self._carriage_return, self._escaped_carriage_return)
             .replace(self._single_quote, self._escaped_single_quote)
+            .replace('\u2028', '\\u2028')  # Unicode line separator
+            .replace('\u2029', '\\u2029')  # Unicode paragraph separator
+            .replace('\u0085', '\\u0085')  # Unicode next line character
         )
 
     def _unescape_special_characters(self, string: str) -> str:

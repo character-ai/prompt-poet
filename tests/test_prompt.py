@@ -133,6 +133,31 @@ def test_control_flow_happy():
     assert "Raw string of item item3" in prompt.string
 
 
+def test_scanner_error():
+    prompt = Prompt(
+        template_data={"var1": "foo\u2028bar"},
+        template_path=os.path.abspath(
+            os.path.join(CWD, "templates", "simple_prompt.yml.j2")
+        ),
+    )
+    assert prompt.string == "Raw string of the first part foo\\u2028bar"
+
+    prompt = Prompt(
+        template_data={"var1": "foo\u2029bar"},
+        template_path=os.path.abspath(
+            os.path.join(CWD, "templates", "simple_prompt.yml.j2")
+        ),
+    )
+    assert prompt.string == "Raw string of the first part foo\\u2029bar"
+
+    prompt = Prompt(
+        template_data={"var1": "foo\u0085bar"},
+        template_path=os.path.abspath(
+            os.path.join(CWD, "templates", "simple_prompt.yml.j2")
+        ),
+    )
+    assert prompt.string == "Raw string of the first part foo\\u0085bar"
+
 def test_example_cai_template_happy():
     prompt = Prompt(
         template_data={
