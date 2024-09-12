@@ -234,6 +234,11 @@ class Prompt:
         return self._template.template_name
 
     @property
+    def template_data(self) -> dict:
+        """The metadata associated with the template."""
+        return self._template_data
+
+    @property
     def template_dir(self) -> str:
         """The metadata associated with the template."""
         return self._template.template_dir
