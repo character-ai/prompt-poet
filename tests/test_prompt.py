@@ -140,7 +140,7 @@ def test_scanner_error():
             os.path.join(CWD, "templates", "simple_prompt.yml.j2")
         ),
     )
-    assert prompt.string == "Raw string of the first part foo\\u2028bar"
+    assert prompt.string == "Raw string of the first part foo\u2028bar"
 
     prompt = Prompt(
         template_data={"var1": "foo\u2029bar"},
@@ -148,7 +148,7 @@ def test_scanner_error():
             os.path.join(CWD, "templates", "simple_prompt.yml.j2")
         ),
     )
-    assert prompt.string == "Raw string of the first part foo\\u2029bar"
+    assert prompt.string == "Raw string of the first part foo\u2029bar"
 
     prompt = Prompt(
         template_data={"var1": "foo\u0085bar"},
@@ -156,7 +156,7 @@ def test_scanner_error():
             os.path.join(CWD, "templates", "simple_prompt.yml.j2")
         ),
     )
-    assert prompt.string == "Raw string of the first part foo\\u0085bar"
+    assert prompt.string == "Raw string of the first part foo\u0085bar"
 
 def test_example_cai_template_happy():
     prompt = Prompt(
