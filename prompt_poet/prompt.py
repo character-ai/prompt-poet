@@ -489,13 +489,21 @@ class Prompt:
 
     def _escape_special_characters(self, string: str) -> str:
         """Escape sequences that will break yaml parsing."""
+        # Handle ASCII control characters (0-31 and 127)
+        for i in list(range(0, 32)) + [127]:
+            if chr(i) in string:
+                string = string.replace(chr(i), f'\\u{i:04x}')
+
         return (
-            string.replace(self._newline, self._escaped_newline)
-            .replace(self._carriage_return, self._escaped_carriage_return)
-            .replace(self._single_quote, self._escaped_single_quote)
-            .replace('\u2028', '\\u2028')  # Unicode line separator
-            .replace('\u2029', '\\u2029')  # Unicode paragraph separator
-            .replace('\u0085', '\\u0085')  # Unicode next line character
+            string.replace('\n', '\\n')
+            .replace('\r', '\\r')
+            .replace('\t', '\\t')
+            .replace('\'', '\\\'')
+            .replace('"', '\\"')
+            .replace('\u2028', '\\u2028')  # Line separator
+            .replace('\u2029', '\\u2029')  # Paragraph separator
+            .replace('\u0085', '\\u0085')  # Next line
+            .replace('\ufeff', '\\ufeff')  # Zero width no-break space
         )
 
     def _unescape_special_characters(self, string: str) -> str:
