@@ -117,12 +117,6 @@ class Prompt:
         self._from_cache = from_cache
         self._from_examples = from_examples
         self._space_marker = space_marker
-        self._newline = newline
-        self._escaped_newline = escaped_newline
-        self._carriage_return = carriage_return
-        self._escaped_carriage_return = escaped_carriage_return
-        self._single_quote = single_quote
-        self._escaped_single_quote = escaped_single_quote
         self._encode_func = encode_func
         self._tiktoken_encoding_name = tiktoken_encoding_name
         self._truncation_step = truncation_step
@@ -493,10 +487,19 @@ class Prompt:
 
     def _unescape_special_characters(self, string: str) -> str:
         """Unescape special characters."""
+        import re
+        string = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), string)
+    
         return (
-            string.replace(self._escaped_newline, self._newline)
-            .replace(self._escaped_carriage_return, self._carriage_return)
-            .replace(self._escaped_single_quote, self._single_quote)
+            string.replace('\\n', '\n')
+            .replace('\\r', '\r')
+            .replace('\\t', '\t')
+            .replace('\\\'', '\'')
+            .replace('\\"', '"')
+            .replace('\\u2028', '\u2028')  # Line separator
+            .replace('\\u2029', '\u2029')  # Paragraph separator
+            .replace('\\u0085', '\u0085')  # Next line
+            .replace('\\ufeff', '\ufeff')  # Zero width no-break space
         )
 
     def _reset_parts(self):
