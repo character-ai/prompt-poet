@@ -484,3 +484,30 @@ def test_tiktoken_encoding_name():
     )
     prompt.tokenize()
     assert prompt.tokens
+
+
+def test_reply_prompt():
+    _ = Prompt(
+        template_data={
+            "timestamp": "2024 06 24",
+            "username": "Jeff",
+            "character": {
+                "title": "The \r title",
+                "description": "The description",
+                "definition": "The definition\nWith multiple lines\nIn the definition",
+                "participant__name": "Alice",
+            },
+            "persona_definition": "The persona \r definition",
+            "cai_messages": [
+                CAIMessage(author="Alice", text="The first \n \n message"),
+                CAIMessage(author="Jeff", text="The second \r message"),
+                CAIMessage(author="Alice", text="The third message", is_pinned=True),
+                CAIMessage(author="Jeff", text="The fourth ' message"),
+            ],
+            "reply_prompt": 'Ada-H:  *he,, smiled*\n\n"Mm?..',
+        },
+        template_path="cai.yml.j2",
+        from_examples=True,
+        token_limit=100,
+    )
+    

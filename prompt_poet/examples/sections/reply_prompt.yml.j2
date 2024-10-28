@@ -1,3 +1,3 @@
 - name: "reply_prompt"
   content: |
-    {{ settings.start_token }}{{ reply_prompt }}
+    {{ settings.start_token }}{{ escape_special_characters(reply_prompt) }}
