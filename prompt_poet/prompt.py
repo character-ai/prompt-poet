@@ -4,16 +4,17 @@ import copy
 import inspect
 import logging
 import math
+import re
 from dataclasses import dataclass
 from functools import reduce
+from typing import Callable
 
 import yaml
 from examples import cai_helpers
 from pp_exceptions import TruncationError
-from template_loaders import TemplateLoader
 from template import Template
+from template_loaders import TemplateLoader
 from tokenizer import get_encode_func
-from typing import Callable
 
 SPACE_MARKER = "<|space|>"
 
@@ -97,12 +98,6 @@ class Prompt:
         from_cache: bool = False,
         from_examples: bool = False,
         space_marker: str = SPACE_MARKER,
-        newline: str = "\n",
-        escaped_newline: str = "\\n",
-        carriage_return: str = "\r",
-        escaped_carriage_return: str = "\\r",
-        single_quote: str = "'",
-        escaped_single_quote: str = "'",
         allow_token_overrides: bool = False,
     ):
         """Initialize the prompt object."""
@@ -502,7 +497,6 @@ class Prompt:
 
     def _unescape_special_characters(self, string: str) -> str:
         """Unescape special characters."""
-        import re
         string = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), string)
     
         return (
