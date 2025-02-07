@@ -454,7 +454,7 @@ class Prompt:
 
     def _render_parts(self):
         self._rendered_template = self._template.render_template(self._template_data)
-        loaded_yaml = yaml.load(self._rendered_template, Loader=yaml.CSafeLoader)
+        loaded_yaml = list(yaml.safe_load_all(self._rendered_template))
 
         # TODO: Process parts in parallel for speedup.
         self._parts = [None] * len(loaded_yaml)
