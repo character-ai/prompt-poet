@@ -40,7 +40,8 @@ class TemplateRegistry:
         if not self._initialized or reset:
             # In the case of reset, try to remove the background refresh thread.
             self._stop_background_thread_if_running()
-            self._template_cache = LRUCache(maxsize=cache_max_size)
+            self._template_cache = {}
+            self._cache_max_size = cache_max_size
             self._template_refresh_interval_secs = template_refresh_interval_secs
             self._default_template = None
             self._template_loader_cache = {}
@@ -78,12 +79,14 @@ class TemplateRegistry:
 
         cache_key = template_loader.id()
         if cache_key not in self._template_cache:
-            self._template_loader_cache[cache_key] = template_loader
+            new_template_loader_cache = dict(self._template_loader_cache)
+            new_template_loader_cache[cache_key] = template_loader
+            self._template_loader_cache = new_template_loader_cache
             self._template_cache[cache_key] = template_loader.load()
         return self._template_cache[cache_key]
 
     @property
-    def logger(self) -> str:
+    def logger(self):
         """The logger to be used by this module."""
         if self._provided_logger:
             return self._provided_logger
