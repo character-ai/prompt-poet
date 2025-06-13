@@ -54,11 +54,13 @@ class TemplateRegistry:
     def _load_internal(self):
         """Load the template from GCS and update cache."""
         while not self._stop_event.is_set():
+            new_template_cache = {}
             for cache_key, template_loader in self._template_loader_cache.items():
                 try:
-                    self._template_cache[cache_key] = template_loader.load()
+                    new_template_cache[cache_key] = template_loader.load()
                 except Exception as ex:
                     self.logger.error(f"Error loading template for template with id: {cache_key}: {ex}")
+            self._template_cache = new_template_cache
             time.sleep(self._template_refresh_interval_secs)
 
     def get_template(
@@ -78,9 +80,12 @@ class TemplateRegistry:
             return template_loader.load()
 
         cache_key = template_loader.id()
-        if cache_key not in self._template_cache:
+        if cache_key not in self._template_loader_cache:
             new_template_loader_cache = dict(self._template_loader_cache)
             new_template_loader_cache[cache_key] = template_loader
+            if len(new_template_loader_cache) > self._cache_max_size:
+                key_to_remove = next(iter(new_template_loader_cache.keys()))
+                del new_template_loader_cache[key_to_remove]
             self._template_loader_cache = new_template_loader_cache
             self._template_cache[cache_key] = template_loader.load()
         return self._template_cache[cache_key]
