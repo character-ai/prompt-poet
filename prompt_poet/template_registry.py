@@ -5,7 +5,6 @@ import threading
 import time
 
 import jinja2 as j2
-from cachetools import LRUCache
 
 from template_loaders import TemplateLoader
 
@@ -54,13 +53,20 @@ class TemplateRegistry:
     def _load_internal(self):
         """Load the template from GCS and update cache."""
         while not self._stop_event.is_set():
-            new_template_cache = {}
-            for cache_key, template_loader in self._template_loader_cache.items():
+            cache_keys = list(self._template_loader_cache.keys())
+            if len(cache_keys) > self._cache_max_size:
+                excess = len(cache_keys) - self._cache_max_size
+                for key in cache_keys[:excess]:
+                    self._template_loader_cache.pop(key, None)
+                    self._template_cache.pop(key, None)
+                cache_keys = cache_keys[excess:]
+
+            for cache_key in cache_keys:
                 try:
-                    new_template_cache[cache_key] = template_loader.load()
+                    template_loader = self._template_loader_cache[cache_key]
+                    self._template_cache[cache_key] = template_loader.load()
                 except Exception as ex:
                     self.logger.error(f"Error loading template for template with id: {cache_key}: {ex}")
-            self._template_cache = new_template_cache
             time.sleep(self._template_refresh_interval_secs)
 
     def get_template(
@@ -81,12 +87,7 @@ class TemplateRegistry:
 
         cache_key = template_loader.id()
         if cache_key not in self._template_loader_cache:
-            new_template_loader_cache = dict(self._template_loader_cache)
-            new_template_loader_cache[cache_key] = template_loader
-            if len(new_template_loader_cache) > self._cache_max_size:
-                key_to_remove = next(iter(new_template_loader_cache.keys()))
-                del new_template_loader_cache[key_to_remove]
-            self._template_loader_cache = new_template_loader_cache
+            self._template_loader_cache[cache_key] = template_loader
             self._template_cache[cache_key] = template_loader.load()
         return self._template_cache[cache_key]
 
