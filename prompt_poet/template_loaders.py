@@ -101,12 +101,14 @@ class CacheLoader(BaseLoader):
 
 
 class GCSDictTemplateLoader(TemplateLoader):
-    def __init__(self, bucket_name: str, template_path: str, gcs_client: storage.Client):
+    def __init__(self, bucket_name: str, template_path: str, gcs_client: storage.Client, status_file_path: str | None = None):
         self._bucket_name = bucket_name
         self._gcs_client = gcs_client
         self._template_dir, self._template_name = _parse_template_path(template_path)
         self._mapping = {}
         self._generation_data = {}
+        self._status_file = status_file_path
+        self._status_file_generation = None
 
     def _is_stale(self, blob: storage.Blob) -> bool:
         """Check if the file needs to be downloaded."""
@@ -116,6 +118,17 @@ class GCSDictTemplateLoader(TemplateLoader):
     def _download(self):
         """Download all files from the specified GCS directory to the local cache."""
         bucket = self._gcs_client.bucket(self._bucket_name)
+        if self._status_file:
+            blob = bucket.blob(self._status_file)
+            try:
+                blob.download_as_text()
+                generation = blob.generation
+                if generation == self._status_file_generation:
+                    return
+                self._status_file_generation = generation
+            except Exception as e:
+                logger.warning(f"Failed to check on the status file {self._status_file}: {e}")
+
         blobs = bucket.list_blobs(prefix=self._template_dir)
         for blob in blobs:
             if blob.name.endswith("/"):
