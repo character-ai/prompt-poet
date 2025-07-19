@@ -3,11 +3,9 @@
 import logging
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 import jinja2 as j2
 
-from prompt_poet.template_loaders import GCSDictTemplateLoader
 from template_loaders import TemplateLoader
 
 CACHE_MAX_SIZE = 100
