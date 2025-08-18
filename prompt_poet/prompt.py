@@ -4,16 +4,17 @@ import copy
 import inspect
 import logging
 import math
+import re
 from dataclasses import dataclass
 from functools import reduce
+from typing import Callable
 
 import yaml
 from examples import cai_helpers
 from pp_exceptions import TruncationError
-from template_loaders import TemplateLoader
 from template import Template
+from template_loaders import TemplateLoader
 from tokenizer import get_encode_func
-from typing import Callable
 
 SPACE_MARKER = "<|space|>"
 
@@ -97,12 +98,6 @@ class Prompt:
         from_cache: bool = False,
         from_examples: bool = False,
         space_marker: str = SPACE_MARKER,
-        newline: str = "\n",
-        escaped_newline: str = "\\n",
-        carriage_return: str = "\r",
-        escaped_carriage_return: str = "\\r",
-        single_quote: str = "'",
-        escaped_single_quote: str = "'",
         allow_token_overrides: bool = False,
     ):
         """Initialize the prompt object."""
@@ -122,12 +117,6 @@ class Prompt:
         self._from_cache = from_cache
         self._from_examples = from_examples
         self._space_marker = space_marker
-        self._newline = newline
-        self._escaped_newline = escaped_newline
-        self._carriage_return = carriage_return
-        self._escaped_carriage_return = escaped_carriage_return
-        self._single_quote = single_quote
-        self._escaped_single_quote = escaped_single_quote
         self._encode_func = encode_func
         self._tiktoken_encoding_name = tiktoken_encoding_name
         self._truncation_step = truncation_step
@@ -491,21 +480,37 @@ class Prompt:
 
     def _escape_special_characters(self, string: str) -> str:
         """Escape sequences that will break yaml parsing."""
+        # Handle ASCII control characters (0-31 and 127)
+        for i in list(range(0, 32)) + [127]:
+            if chr(i) in string:
+                string = string.replace(chr(i), f'\\u{i:04x}')
+
         return (
-            string.replace(self._newline, self._escaped_newline)
-            .replace(self._carriage_return, self._escaped_carriage_return)
-            .replace(self._single_quote, self._escaped_single_quote)
-            .replace('\u2028', '\\u2028')  # Unicode line separator
-            .replace('\u2029', '\\u2029')  # Unicode paragraph separator
-            .replace('\u0085', '\\u0085')  # Unicode next line character
+            string.replace('\n', '\\n')
+            .replace('\r', '\\r')
+            .replace('\t', '\\t')
+            .replace('\'', '\\\'')
+            .replace('"', '\\"')
+            .replace('\u2028', '\\u2028')  # Line separator
+            .replace('\u2029', '\\u2029')  # Paragraph separator
+            .replace('\u0085', '\\u0085')  # Next line
+            .replace('\ufeff', '\\ufeff')  # Zero width no-break space
         )
 
     def _unescape_special_characters(self, string: str) -> str:
         """Unescape special characters."""
+        string = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), string)
+    
         return (
-            string.replace(self._escaped_newline, self._newline)
-            .replace(self._escaped_carriage_return, self._carriage_return)
-            .replace(self._escaped_single_quote, self._single_quote)
+            string.replace('\\n', '\n')
+            .replace('\\r', '\r')
+            .replace('\\t', '\t')
+            .replace('\\\'', '\'')
+            .replace('\\"', '"')
+            .replace('\\u2028', '\u2028')  # Line separator
+            .replace('\\u2029', '\u2029')  # Paragraph separator
+            .replace('\\u0085', '\u0085')  # Next line
+            .replace('\\ufeff', '\ufeff')  # Zero width no-break space
         )
 
     def _reset_parts(self):
