@@ -4,6 +4,7 @@ import copy
 import inspect
 import logging
 import math
+import unicodedata
 from dataclasses import dataclass
 from functools import reduce
 
@@ -491,7 +492,7 @@ class Prompt:
 
     def _escape_special_characters(self, string: str) -> str:
         """Escape sequences that will break yaml parsing."""
-        return (
+        st = (
             string.replace(self._newline, self._escaped_newline)
             .replace(self._carriage_return, self._escaped_carriage_return)
             .replace(self._single_quote, self._escaped_single_quote)
@@ -499,6 +500,7 @@ class Prompt:
             .replace('\u2029', '\\u2029')  # Unicode paragraph separator
             .replace('\u0085', '\\u0085')  # Unicode next line character
         )
+        return "".join(ch for ch in st if unicodedata.category(ch)[0]!="C")
 
     def _unescape_special_characters(self, string: str) -> str:
         """Unescape special characters."""
