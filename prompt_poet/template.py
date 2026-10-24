@@ -11,7 +11,7 @@ from template_registry import TemplateRegistry
 
 
 class Template:
-    """A Prompt Poet (PP) template orignally represented as a valid *.yaml.j2 file.
+    """A Prompt Poet (PP) template originally represented as a valid *.yaml.j2 file.
 
     :param template_path: (deprecated) The path to the template file on disk.
     :param template_loader: A `TemplateLoader` instance for loading templates.
@@ -93,7 +93,7 @@ class Template:
 
     @property
     def rendered_template(self) -> j2.Template:
-        """The template after the jinja2 syntax have been rendered."""
+        """The template after the jinja2 syntax has been rendered."""
         return self._rendered_template
 
     @property

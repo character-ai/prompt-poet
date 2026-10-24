@@ -32,7 +32,7 @@ def canonicalize_name(name: Union[str, None]) -> str:
 
 def canonicalize_user_name(name: Union[str, None]) -> str:
     """Makes name format consistent with author names we use in training data."""
-    # The "-" is used in upstream components and should be overriden to default value.
+    # The "-" is used in upstream components and should be overridden to default value.
     if not name or name == DASH:
         return DEFAULT_USERNAME
     return DASH.join(name.split())
@@ -42,7 +42,7 @@ def get_character_definition_messages(
     character: dict,
     username: str,
 ) -> list[CAIMessage]:
-    """Returns messages made from character name, descrption and definition."""
+    """Returns messages made from character name, description and definition."""
     del username
     charname = canonicalize_name(character.get("participant__name", ""))
 
